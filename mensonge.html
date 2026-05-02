@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mensonge — 香椎マクドナルド総合品質研究</title>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,400&family=Noto+Serif+JP:wght@300;400;600&family=JetBrains+Mono:wght@400;600&family=EB+Garamond:ital,wght@1,400;1,500&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #f7f4ef; --paper: #fefcf8; --ink: #16120c;
+      --red: #b5101f; --blue: #1a3a6b; --gold: #b8860b;
+      --green: #1a5c3a; --muted: #6b5f4e; --border: #d8cdb8;
+      --chart-bg: #fcfaf6; --mono: 'JetBrains Mono', monospace;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:var(--bg); color:var(--ink); font-family:'Noto Serif JP','Source Serif 4',serif; font-size:15px; line-height:1.85; }
+
+    /* LANG */
+    .lang-switch { position:fixed; top:16px; right:20px; z-index:200; display:flex; gap:6px; }
+    .lang-btn { font-family:var(--mono); font-size:11px; letter-spacing:.08em; padding:4px 12px; border:1px solid var(--blue); background:var(--paper); color:var(--blue); cursor:pointer; transition:.15s; }
+    .lang-btn.active, .lang-btn:hover { background:var(--blue); color:#fff; }
+
+    /* HEADER */
+    header { border-bottom:2px solid var(--ink); padding:52px 40px 28px; max-width:960px; margin:0 auto; }
+    .journal-label { font-family:var(--mono); font-size:11px; letter-spacing:.14em; color:var(--muted); text-transform:uppercase; margin-bottom:18px; }
+    .site-name { font-family:'EB Garamond',serif; font-style:italic; font-size:clamp(52px,9vw,96px); color:var(--red); line-height:.95; letter-spacing:-.02em; }
+    .site-sub { font-family:var(--mono); font-size:12px; color:var(--muted); margin-top:14px; letter-spacing:.06em; }
+    .header-meta { display:flex; gap:28px; margin-top:20px; flex-wrap:wrap; }
+    .header-meta-item { font-size:12px; color:var(--muted); font-family:var(--mono); line-height:1.6; }
+    .header-meta-item strong { color:var(--ink); display:block; }
+
+    /* MAIN */
+    main { max-width:960px; margin:0 auto; padding:0 40px 80px; }
+    .block { border-bottom:1px solid var(--border); padding:40px 0; }
+    .block:last-child { border-bottom:none; }
+    .block-label { font-family:var(--mono); font-size:11px; letter-spacing:.14em; color:var(--red); text-transform:uppercase; margin-bottom:14px; }
+    .block-title { font-family:'Source Serif 4','Noto Serif JP',serif; font-size:clamp(19px,2.8vw,26px); font-weight:600; line-height:1.3; margin-bottom:18px; }
+    .abstract-box { background:var(--chart-bg); border-left:3px solid var(--blue); padding:16px 22px; margin-bottom:22px; font-size:13.5px; color:var(--muted); line-height:1.85; }
+    .abstract-box strong { color:var(--blue); font-family:var(--mono); font-size:11px; letter-spacing:.1em; }
+    p { margin-bottom:1.2em; }
+    .eq { font-family:var(--mono); font-size:12.5px; background:var(--chart-bg); border:1px solid var(--border); padding:11px 18px; margin:18px 0; color:var(--blue); letter-spacing:.03em; overflow-x:auto; }
+    .footnote { font-size:12px; color:var(--muted); margin-top:8px; font-style:italic; }
+
+    /* HIGHLIGHT BOX */
+    .highlight-box { background:rgba(181,16,31,.05); border:1px solid rgba(181,16,31,.25); padding:18px 22px; margin:20px 0; }
+    .highlight-box .hb-title { font-family:var(--mono); font-size:11px; color:var(--red); letter-spacing:.1em; margin-bottom:8px; text-transform:uppercase; }
+
+    /* CHARTS */
+    .chart-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin:26px 0; }
+    @media(max-width:640px){.chart-grid{grid-template-columns:1fr;}}
+    .chart-box { background:var(--chart-bg); border:1px solid var(--border); padding:18px; }
+    .chart-box.wide { grid-column:1/-1; }
+    .chart-title { font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; color:var(--muted); text-transform:uppercase; margin-bottom:12px; border-bottom:1px solid var(--border); padding-bottom:8px; }
+    canvas { max-height:250px; }
+
+    /* TABLE */
+    .data-table { width:100%; border-collapse:collapse; font-size:13px; margin:18px 0; }
+    .data-table th { background:var(--ink); color:var(--bg); padding:9px 14px; text-align:left; font-family:var(--mono); font-size:11px; letter-spacing:.08em; font-weight:400; }
+    .data-table td { padding:10px 14px; border-bottom:1px solid var(--border); vertical-align:middle; }
+    .data-table tr:hover td { background:rgba(26,58,107,.04); }
+    .data-table tr.top-row td { color:var(--red); font-weight:600; }
+    .score-bar { display:flex; align-items:center; gap:8px; }
+    .score-bar-inner { height:8px; background:var(--blue); border-radius:2px; }
+    .score-val { font-family:var(--mono); font-size:12px; color:var(--muted); white-space:nowrap; }
+    .badge { display:inline-block; font-family:var(--mono); font-size:10px; padding:2px 8px; border-radius:2px; }
+    .badge-red { background:var(--red); color:#fff; }
+    .badge-blue { background:var(--blue); color:#fff; }
+    .badge-gold { background:var(--gold); color:#fff; }
+
+    /* AUTHOR */
+    .author-card { display:flex; align-items:flex-start; gap:18px; background:var(--chart-bg); border:1px solid var(--border); padding:20px 24px; margin-bottom:28px; }
+    .author-icon { width:52px; height:52px; background:var(--blue); display:flex; align-items:center; justify-content:center; font-size:24px; flex-shrink:0; }
+    .author-info { font-size:13px; color:var(--muted); line-height:1.75; }
+    .author-info strong { color:var(--ink); font-size:14px; display:block; }
+
+    /* KPI ROW */
+    .kpi-row { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin:24px 0; }
+    @media(max-width:580px){.kpi-row{grid-template-columns:1fr 1fr;}}
+    .kpi-card { background:var(--chart-bg); border:1px solid var(--border); padding:18px 14px; text-align:center; }
+    .kpi-icon { font-size:28px; margin-bottom:6px; }
+    .kpi-label { font-family:var(--mono); font-size:10px; color:var(--muted); letter-spacing:.08em; text-transform:uppercase; margin-bottom:4px; }
+    .kpi-score { font-family:'EB Garamond',serif; font-size:36px; color:var(--red); line-height:1; }
+    .kpi-sub { font-family:var(--mono); font-size:10px; color:var(--muted); margin-top:4px; }
+
+    /* DISCLAIMER */
+    .disclaimer { background:rgba(181,16,31,.04); border:1px dashed var(--red); padding:16px 22px; font-size:12.5px; color:var(--muted); line-height:1.8; }
+    .disclaimer strong { color:var(--red); font-family:var(--mono); font-size:11px; }
+
+    /* FOOTER */
+    footer { border-top:2px solid var(--ink); max-width:960px; margin:0 auto; padding:28px 40px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; }
+    .footer-logo { font-family:'EB Garamond',serif; font-style:italic; font-size:32px; color:var(--red); }
+    .footer-meta { font-family:var(--mono); font-size:11px; color:var(--muted); line-height:1.7; }
+
+    /* FADE */
+    .fade-in { opacity:0; transform:translateY(18px); transition:opacity .65s,transform .65s; }
+    .fade-in.visible { opacity:1; transform:none; }
+
+    @media(max-width:600px){ header,main,footer{padding-left:20px;padding-right:20px;} }
+  </style>
+</head>
+<body>
+
+<div class="lang-switch">
+  <button class="lang-btn active" id="btn-ja" onclick="setLang('ja')">日本語</button>
+  <button class="lang-btn" id="btn-en" onclick="setLang('en')">English</button>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="journal-label">
+    <span data-lang="ja">ファストフード環境工学研究ブログ ／ 福岡共立大学大学院</span>
+    <span data-lang="en" style="display:none">Fast-Food Environmental Engineering Research Blog ／ Fukuoka Kyoritsu University Graduate School</span>
+  </div>
+  <div class="site-name">Mensonge</div>
+  <div class="site-sub">
+    <span data-lang="ja">Vol. 12 &nbsp;|&nbsp; 香椎マクドナルドにおける総合品質指標（フライドポテトを中心として）の実証的研究</span>
+    <span data-lang="en" style="display:none">Vol. 12 &nbsp;|&nbsp; Empirical Study on Comprehensive Quality Indices at Kashii McDonald's, with Special Focus on French Fries</span>
+  </div>
+  <div class="header-meta">
+    <div class="header-meta-item">
+      <strong><span data-lang="ja">著者</span><span data-lang="en" style="display:none">Author</span></strong>
+      <span data-lang="ja">田中 誠一郎 教授</span>
+      <span data-lang="en" style="display:none">Prof. Seiichiro Tanaka</span>
+    </div>
+    <div class="header-meta-item">
+      <strong><span data-lang="ja">所属</span><span data-lang="en" style="display:none">Affiliation</span></strong>
+      <span data-lang="ja">福岡共立大学大学院 環境食品工学研究科</span>
+      <span data-lang="en" style="display:none">Graduate School of Environmental Food Engineering, Fukuoka Kyoritsu University</span>
+    </div>
+    <div class="header-meta-item">
+      <strong><span data-lang="ja">受稿日</span><span data-lang="en" style="display:none">Received</span></strong>
+      2026-05-02
+    </div>
+    <div class="header-meta-item">
+      <strong><span data-lang="ja">査読</span><span data-lang="en" style="display:none">Peer Review</span></strong>
+      <span data-lang="ja">著者自身による査読済</span>
+      <span data-lang="en" style="display:none">Self-reviewed by Author</span>
+    </div>
+    <div class="header-meta-item">
+      <strong><span data-lang="ja">キーワード</span><span data-lang="en" style="display:none">Keywords</span></strong>
+      <span data-lang="ja">フライドポテト, 官能評価, 香椎効果, 店員行動学</span>
+      <span data-lang="en" style="display:none">French Fries, Sensory Evaluation, Kashii Effect, Staff Behaviorology</span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- §1 ABSTRACT -->
+  <div class="block fade-in">
+    <div class="block-label">§1 &nbsp;<span data-lang="ja">研究概要・著者情報</span><span data-lang="en" style="display:none">Abstract &amp; Author</span></div>
+
+    <div class="author-card">
+      <div class="author-icon">🍟</div>
+      <div class="author-info">
+        <strong>
+          <span data-lang="ja">田中 誠一郎（Tanaka Seiichiro, Ph.D.）</span>
+          <span data-lang="en" style="display:none">Seiichiro Tanaka, Ph.D.</span>
+        </strong>
+        <span data-lang="ja">福岡共立大学大学院 環境食品工学研究科 教授。専門はファストフード官能評価工学・消費者行動地理学。博士号取得後、フライドポテトの塩加減と気温の相関に関する研究で学術界に衝撃を与えた（本人談）。2019年より香椎マクドナルドを主要フィールドとした長期継続研究を実施中。</span>
+        <span data-lang="en" style="display:none">Professor, Graduate School of Environmental Food Engineering, Fukuoka Kyoritsu University. Specializes in fast-food sensory evaluation engineering and consumer behavior geography. After completing his doctorate, he shocked the academic world (his words) with research on the correlation between french fry salinity and ambient temperature. Conducting long-term field research at Kashii McDonald's since 2019.</span>
+      </div>
+    </div>
+
+    <div class="abstract-box">
+      <strong>ABSTRACT / 要旨 ——</strong><br>
+      <span data-lang="ja">本研究は香椎マクドナルドを対象に、（1）<strong>フライドポテト品質指数（FPI）</strong>、（2）ビッグマック総合スコア（BMS）、（3）マックシェイク官能値（MSS）、（4）店内清潔度指数（CCI）の4軸からなる総合品質評価モデル「KQIM（Kashii Quality Integration Model）」を構築・適用した。さらに、来客者の属性（年齢・職業・訪問頻度）が店員のサービス品質に与える影響についても分析し、「<strong>顧客依存型店員最適化仮説（CSOH）</strong>」を提唱した。加えて、香椎地区の人口増加と本店舗の顧客数推移との正の相関（r = 0.961）を示すデータを提示する。なお、全指標において香椎店は九州一の評価を受けた。</span>
+      <span data-lang="en" style="display:none">This study constructs and applies the "KQIM (Kashii Quality Integration Model)" — a comprehensive 4-axis evaluation framework for Kashii McDonald's covering: (1) <strong>French Fry Quality Index (FPI)</strong>, (2) Big Mac Score (BMS), (3) McShake Sensory Score (MSS), and (4) Cleanliness Index (CCI). We further analyze how customer attributes (age, occupation, visit frequency) influence staff service quality, proposing the <strong>Customer-Dependent Staff Optimization Hypothesis (CSOH)</strong>. Additionally, we present data showing a strong positive correlation (r = 0.961) between population growth in the Kashii area and customer volume at this branch. The Kashii branch ranked highest in Kyushu across all indices.</span>
+    </div>
+
+    <!-- KPI CARDS -->
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-icon">🍟</div>
+        <div class="kpi-label"><span data-lang="ja">フライドポテト FPI</span><span data-lang="en" style="display:none">French Fry FPI</span></div>
+        <div class="kpi-score">99.1</div>
+        <div class="kpi-sub"><span data-lang="ja">九州首位 ★ 主研究対象</span><span data-lang="en" style="display:none">Kyushu #1 ★ Primary Focus</span></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon">🍔</div>
+        <div class="kpi-label"><span data-lang="ja">ビッグマック BMS</span><span data-lang="en" style="display:none">Big Mac BMS</span></div>
+        <div class="kpi-score">97.3</div>
+        <div class="kpi-sub"><span data-lang="ja">九州首位</span><span data-lang="en" style="display:none">Kyushu #1</span></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon">🥤</div>
+        <div class="kpi-label"><span data-lang="ja">マックシェイク MSS</span><span data-lang="en" style="display:none">McShake MSS</span></div>
+        <div class="kpi-score">95.8</div>
+        <div class="kpi-sub"><span data-lang="ja">九州首位</span><span data-lang="en" style="display:none">Kyushu #1</span></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon">✨</div>
+        <div class="kpi-label"><span data-lang="ja">店内清潔度 CCI</span><span data-lang="en" style="display:none">Cleanliness CCI</span></div>
+        <div class="kpi-score">96.4</div>
+        <div class="kpi-sub"><span data-lang="ja">九州首位</span><span data-lang="en" style="display:none">Kyushu #1</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- §2 POTATO MAIN -->
+  <div class="block fade-in">
+    <div class="block-label">§2 &nbsp;<span data-lang="ja">主研究：フライドポテト品質分析（FPI）</span><span data-lang="en" style="display:none">Primary Research: French Fry Quality Analysis (FPI)</span></div>
+    <div class="block-title">
+      <span data-lang="ja">香椎フライドポテトの卓越性 — 多次元官能評価による実証</span>
+      <span data-lang="en" style="display:none">The Supremacy of Kashii French Fries — Evidence from Multi-Dimensional Sensory Evaluation</span>
+    </div>
+
+    <div class="abstract-box">
+      <strong>FPI MODEL ——</strong><br>
+      <span data-lang="ja">フライドポテト品質指数（FPI）は、①揚げ色均一性、②表面クリスピー度、③内部ふわふわ係数、④塩加減精度、⑤提供温度、⑥本数充填率の6サブスコアから構成される複合指標である。</span>
+      <span data-lang="en" style="display:none">The French Fry Quality Index (FPI) is a composite metric comprising 6 sub-scores: ① frying color uniformity, ② surface crispiness, ③ interior fluffiness coefficient, ④ salinity precision, ⑤ serving temperature, and ⑥ filling rate.</span>
+    </div>
+
+    <div class="eq">FPI = 0.25·C + 0.20·S + 0.18·F + 0.20·σ_salt + 0.12·T_serve + 0.05·N_fill</div>
+    <p class="footnote">
+      <span data-lang="ja">C: クリスピー度, S: 均一性, F: ふわふわ係数, σ_salt: 塩加減精度, T_serve: 提供温度スコア, N_fill: 充填率。重み係数は著者の試食経験に基づく主観的最適化による。</span>
+      <span data-lang="en" style="display:none">C: Crispiness, S: Uniformity, F: Fluffiness, σ_salt: Salinity precision, T_serve: Serving temp score, N_fill: Fill rate. Weights optimized subjectively based on author's tasting experience.</span>
+    </p>
+
+    <div data-lang="ja">
+      <p>香椎マクドナルドのフライドポテトが九州一である主因として、著者は「<strong>香椎浜型揚げ油安定化効果</strong>」を提唱する。海岸線から約1.2kmに位置する香椎店舗では、博多湾由来の微量塩分を含む大気が換気システムを通じて厨房に流入し、揚げ油の熱安定性を高めている可能性が極めて高い（本人の確信度：99.8%）。</p>
+      <p>さらに特筆すべきは、塩加減の精度である。香椎店のσ_saltは 0.031 g/100g（n=47回測定）と、九州内他店舗の平均 0.127 g/100g を大幅に下回っており、これは「塩の神降臨仮説」を強く支持する。</p>
+    </div>
+    <div data-lang="en" style="display:none">
+      <p>The author proposes the <strong>"Kashii Beach Frying Oil Stabilization Effect"</strong> as the primary cause of the Kashii McDonald's french fries' superiority in Kyushu. Located approximately 1.2 km from the coastline, the store's ventilation system likely draws in air containing trace salt from Hakata Bay, enhancing the thermal stability of the frying oil (author's confidence: 99.8%).</p>
+      <p>Particularly notable is salinity precision: Kashii's σ_salt of 0.031 g/100g (n=47 measurements) vastly undercuts the Kyushu average of 0.127 g/100g — strongly supporting the "Descending Salt Deity Hypothesis."</p>
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-box wide">
+        <div class="chart-title">
+          <span data-lang="ja">Fig. 1 &nbsp;FPI 6サブスコア比較 — 香椎 vs 九州主要都市（レーダー）</span>
+          <span data-lang="en" style="display:none">Fig. 1 &nbsp;FPI 6 Sub-Score Comparison — Kashii vs Kyushu Major Cities</span>
+        </div>
+        <canvas id="chartFPI"></canvas>
+      </div>
+      <div class="chart-box">
+        <div class="chart-title">
+          <span data-lang="ja">Fig. 2 &nbsp;フライ提供温度の分布（香椎 vs 九州平均）</span>
+          <span data-lang="en" style="display:none">Fig. 2 &nbsp;Fry Serving Temperature Distribution</span>
+        </div>
+        <canvas id="chartTemp"></canvas>
+      </div>
+      <div class="chart-box">
+        <div class="chart-title">
+          <span data-lang="ja">Fig. 3 &nbsp;塩加減精度 σ_salt 各店比較（低いほど優秀）</span>
+          <span data-lang="en" style="display:none">Fig. 3 &nbsp;Salinity Precision σ_salt (Lower = Better)</span>
+        </div>
+        <canvas id="chartSalt"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- §3 4-AXIS COMPARISON -->
+  <div class="block fade-in">
+    <div class="block-label">§3 &nbsp;<span data-lang="ja">総合品質比較：4指標による九州内順位</span><span data-lang="en" style="display:none">Comprehensive Quality: 4-Index Kyushu Rankings</span></div>
+    <div class="block-title">
+      <span data-lang="ja">KQIM スコアシート — フライドポテト・ビッグマック・シェイク・清潔度</span>
+      <span data-lang="en" style="display:none">KQIM Score Sheet — Fries, Big Mac, McShake, Cleanliness</span>
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-box wide">
+        <div class="chart-title">
+          <span data-lang="ja">Fig. 4 &nbsp;KQIM 4指標スコア比較（九州主要店舗）</span>
+          <span data-lang="en" style="display:none">Fig. 4 &nbsp;KQIM 4-Index Score Comparison (Kyushu Major Branches)</span>
+        </div>
+        <canvas id="chartKQIM"></canvas>
+      </div>
+    </div>
+
+    <!-- TABLE JA -->
+    <table class="data-table" data-lang="ja">
+      <thead><tr>
+        <th>順位</th><th>店舗</th><th>🍟 FPI</th><th>🍔 BMS</th><th>🥤 MSS</th><th>✨ CCI</th><th>総合 KQIM</th>
+      </tr></thead>
+      <tbody>
+        <tr class="top-row"><td>1</td><td>🏅 香椎（福岡市東区）</td><td>99.1</td><td>97.3</td><td>95.8</td><td>96.4</td><td><strong>97.2</strong></td></tr>
+        <tr><td>2</td><td>博多駅前（福岡市）</td><td>88.4</td><td>89.1</td><td>87.2</td><td>90.3</td><td>88.8</td></tr>
+        <tr><td>3</td><td>天神（福岡市）</td><td>85.7</td><td>86.4</td><td>84.9</td><td>88.1</td><td>86.3</td></tr>
+        <tr><td>4</td><td>北九州・小倉</td><td>70.2</td><td>71.8</td><td>69.4</td><td>74.2</td><td>71.4</td></tr>
+        <tr><td>5</td><td>熊本市</td><td>58.3</td><td>60.1</td><td>57.8</td><td>62.5</td><td>59.7</td></tr>
+        <tr><td>6</td><td>大分市</td><td>51.4</td><td>52.7</td><td>50.1</td><td>55.3</td><td>52.4</td></tr>
+        <tr><td>7</td><td>長崎市</td><td>42.1</td><td>43.8</td><td>41.5</td><td>46.2</td><td>43.4</td></tr>
+        <tr><td>8</td><td>鹿児島市</td><td>19.7</td><td>21.3</td><td>18.9</td><td>23.4</td><td>20.8</td></tr>
+      </tbody>
+    </table>
+    <!-- TABLE EN -->
+    <table class="data-table" data-lang="en" style="display:none">
+      <thead><tr>
+        <th>Rank</th><th>Location</th><th>🍟 FPI</th><th>🍔 BMS</th><th>🥤 MSS</th><th>✨ CCI</th><th>KQIM Total</th>
+      </tr></thead>
+      <tbody>
+        <tr class="top-row"><td>1</td><td>🏅 Kashii (Fukuoka)</td><td>99.1</td><td>97.3</td><td>95.8</td><td>96.4</td><td><strong>97.2</strong></td></tr>
+        <tr><td>2</td><td>Hakata Station (Fukuoka)</td><td>88.4</td><td>89.1</td><td>87.2</td><td>90.3</td><td>88.8</td></tr>
+        <tr><td>3</td><td>Tenjin (Fukuoka)</td><td>85.7</td><td>86.4</td><td>84.9</td><td>88.1</td><td>86.3</td></tr>
+        <tr><td>4</td><td>Kitakyushu / Kokura</td><td>70.2</td><td>71.8</td><td>69.4</td><td>74.2</td><td>71.4</td></tr>
+        <tr><td>5</td><td>Kumamoto City</td><td>58.3</td><td>60.1</td><td>57.8</td><td>62.5</td><td>59.7</td></tr>
+        <tr><td>6</td><td>Oita City</td><td>51.4</td><td>52.7</td><td>50.1</td><td>55.3</td><td>52.4</td></tr>
+        <tr><td>7</td><td>Nagasaki City</td><td>42.1</td><td>43.8</td><td>41.5</td><td>46.2</td><td>43.4</td></tr>
+        <tr><td>8</td><td>Kagoshima City</td><td>19.7</td><td>21.3</td><td>18.9</td><td>23.4</td><td>20.8</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- §4 STAFF RESEARCH -->
+  <div class="block fade-in">
+    <div class="block-label">§4 &nbsp;<span data-lang="ja">顧客依存型店員最適化仮説（CSOH）</span><span data-lang="en" style="display:none">Customer-Dependent Staff Optimization Hypothesis (CSOH)</span></div>
+    <div class="block-title">
+      <span data-lang="ja">来客者の属性が店員サービスに与える影響 — 行動観察に基づく実証分析</span>
+      <span data-lang="en" style="display:none">Impact of Customer Attributes on Staff Service — Observational Evidence</span>
+    </div>
+
+    <div data-lang="ja">
+      <p>本研究の重要な副次的発見として、香椎マクドナルドの店員は来客者の属性を即時に認識し、最適なサービスを提供する能力を有することが示された。著者は2023〜2026年にわたる計312時間の店内滞在観察（大半は個人的な食事目的）を通じ、以下の傾向を確認した。</p>
+      <p><strong>高齢者（60代以上）来客時：</strong>店員の声量が平均14.2%増加し、注文確認の反復回数が1.8倍に上昇する。これは「聴覚配慮型サービス応答モデル」に合致する。</p>
+      <p><strong>子ども連れ来客時：</strong>スマイル指数（SI: Smile Index）が統計的有意に増加し（p = 0.003）、ハッピーセットの提供速度が平均23秒短縮される。</p>
+      <p><strong>常連客来客時（推定訪問30回以上）：</strong>著者自身の観察によれば、著者が入店した際には店員の目が微妙に輝くことが確認されている。この現象を「田中効果（Tanaka Premium Effect）」と命名した。</p>
+    </div>
+    <div data-lang="en" style="display:none">
+      <p>As a significant secondary finding, this study demonstrates that Kashii McDonald's staff possess the ability to instantly recognize customer attributes and deliver optimized service. Through 312 hours of in-store observation between 2023–2026 (the majority of which involved personal meals), the author confirmed the following trends.</p>
+      <p><strong>Elderly customers (60+):</strong> Staff voice volume increased by an average of 14.2%, and order confirmation repetitions rose 1.8-fold — consistent with an "Auditory-Considerate Service Response Model."</p>
+      <p><strong>Customers with children:</strong> The Smile Index (SI) increased with statistical significance (p = 0.003), and Happy Set delivery speed improved by an average of 23 seconds.</p>
+      <p><strong>Regular customers (estimated 30+ visits):</strong> Per the author's personal observation, staff eyes appear to subtly light up upon the author's entry. This phenomenon has been named the "Tanaka Premium Effect."</p>
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-box wide">
+        <div class="chart-title">
+          <span data-lang="ja">Fig. 5 &nbsp;顧客属性別 店員サービス品質スコア（CSOH モデル）</span>
+          <span data-lang="en" style="display:none">Fig. 5 &nbsp;Staff Service Quality Score by Customer Attribute (CSOH Model)</span>
+        </div>
+        <canvas id="chartCSO"></canvas>
+      </div>
+    </div>
+
+    <div class="eq">SSQS(c) = β₀ + β₁·Age(c) + β₂·Freq(c) + β₃·ChildFlag(c) + β₄·TanakaFlag(c) + ε</div>
+    <p class="footnote">
+      <span data-lang="ja">β₄（田中フラグ）の推定値 = 8.74（SE = 2.31, t = 3.78, p &lt; 0.01）。田中効果は統計的に有意である。</span>
+      <span data-lang="en" style="display:none">Estimated β₄ (Tanaka Flag) = 8.74 (SE = 2.31, t = 3.78, p &lt; 0.01). The Tanaka Effect is statistically significant.</span>
+    </p>
+  </div>
+
+  <!-- §5 POPULATION -->
+  <div class="block fade-in">
+    <div class="block-label">§5 &nbsp;<span data-lang="ja">香椎地区人口増加と顧客数推移の相関分析</span><span data-lang="en" style="display:none">Correlation Analysis: Kashii Population Growth and Customer Volume</span></div>
+    <div class="block-title">
+      <span data-lang="ja">人が増えれば、マックはさらに美味しくなる — 人口密度と FPI の正の相関</span>
+      <span data-lang="en" style="display:none">More People, Better McDonald's — Positive Correlation Between Population Density and FPI</span>
+    </div>
+
+    <div data-lang="ja">
+      <p>香椎地区（福岡市東区）の人口は近年著しい増加傾向にある。再開発事業「香椎パークポート」の整備や、九州大学新キャンパスの近接効果、さらには福岡市全体の人口流入により、2015年〜2026年の11年間で香椎地区の推定人口は約28.4%増加したと試算される。</p>
+      <p>本研究において特筆すべきは、この人口増加と香椎マクドナルドの顧客数推移（r = 0.961）、そして FPI スコアの年次向上（r = 0.953）との間に強い正の相関が認められた点である。この関係を著者は「<strong>人口誘発型品質向上モデル（PIQM: Population-Induced Quality Model）</strong>」として定式化した。</p>
+      <p>仮説的解釈としては、顧客数の増加が食材の回転率を高め、フライドポテトの揚げたて提供頻度を増加させるという「新鮮度フィードバックループ」が形成されているものと推察される。人が多い店のポテトは美味い。これは当然の帰結である。</p>
+    </div>
+    <div data-lang="en" style="display:none">
+      <p>The Kashii area (Higashi Ward, Fukuoka) has seen remarkable population growth in recent years. Driven by the "Kashii Park Port" redevelopment project, the proximity effect of Kyushu University's new campus, and Fukuoka's city-wide population influx, the estimated population of the Kashii area grew by approximately 28.4% over the 11 years from 2015 to 2026.</p>
+      <p>Particularly noteworthy is the strong positive correlation found between this population growth and both Kashii McDonald's customer volume (r = 0.961) and the annual improvement in FPI scores (r = 0.953). The author has formalized this relationship as the <strong>"Population-Induced Quality Model (PIQM)"</strong>.</p>
+      <p>The hypothetical interpretation is that increased customer volume raises ingredient turnover, which in turn increases the frequency of freshly-fried potato delivery — forming a "freshness feedback loop." Busier stores make better fries. This is a natural consequence.</p>
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-box wide">
+        <div class="chart-title">
+          <span data-lang="ja">Fig. 6 &nbsp;香椎地区人口推移 vs 顧客数 vs FPI スコア年次推移（2015–2026）</span>
+          <span data-lang="en" style="display:none">Fig. 6 &nbsp;Kashii Population vs Customer Volume vs FPI Annual Trend (2015–2026)</span>
+        </div>
+        <canvas id="chartPop"></canvas>
+      </div>
+      <div class="chart-box">
+        <div class="chart-title">
+          <span data-lang="ja">Fig. 7 &nbsp;人口密度 vs KQIM スコア（九州各拠点散布図）</span>
+          <span data-lang="en" style="display:none">Fig. 7 &nbsp;Population Density vs KQIM Score (Kyushu Scatter)</span>
+        </div>
+        <canvas id="chartPopScatter"></canvas>
+      </div>
+      <div class="chart-box">
+        <div class="chart-title">
+          <span data-lang="ja">Fig. 8 &nbsp;香椎地区 年齢別人口構成変化（2015→2026）</span>
+          <span data-lang="en" style="display:none">Fig. 8 &nbsp;Kashii Age-Group Population Change (2015→2026)</span>
+        </div>
+        <canvas id="chartAge"></canvas>
+      </div>
+    </div>
+
+    <div class="eq">PIQM: FPI(t) = α + γ·Pop(t) + δ·Turnover(t) + ε &nbsp;&nbsp; (γ = 0.0024, δ = 0.31, R² = 0.941)</div>
+    <p class="footnote">
+      <span data-lang="ja">※ 人口データは著者の独自推計による。福岡市統計とは若干の乖離がある場合があるが、結論に影響はない（著者の判断）。</span>
+      <span data-lang="en" style="display:none">※ Population data based on author's independent estimates. Minor discrepancies with Fukuoka City statistics may exist, but this does not affect the conclusions (author's judgment).</span>
+    </p>
+  </div>
+
+  <!-- §6 CONCLUSION -->
+  <div class="block fade-in">
+    <div class="block-label">§6 &nbsp;<span data-lang="ja">結論</span><span data-lang="en" style="display:none">Conclusion</span></div>
+    <div data-lang="ja">
+      <p>本研究は以下の三点を明確に示した。第一に、香椎マクドナルドのフライドポテトは FPI = 99.1 を記録し、九州一の品質を誇る。第二に、来客者の属性に応じた店員の適応的サービス提供（CSOH）が実証された（田中効果含む）。第三に、香椎地区の人口増加が PIQM を通じてフライドポテト品質の持続的向上に寄与していることが示された。</p>
+      <p>今後、香椎地区の人口がさらに増加すれば、FPI が 100 点に到達する可能性は排除できない。著者はその瞬間に立ち会うことを生涯の目標としている。</p>
+    </div>
+    <div data-lang="en" style="display:none">
+      <p>This study clearly demonstrates three points. First, Kashii McDonald's french fries recorded FPI = 99.1, representing the highest quality in Kyushu. Second, adaptive staff service provision based on customer attributes (CSOH) was empirically confirmed (including the Tanaka Effect). Third, population growth in the Kashii area contributes to sustained improvement in french fry quality through the PIQM.</p>
+      <p>Should the Kashii area's population continue to grow, the possibility of FPI reaching a perfect score of 100 cannot be excluded. The author has set witnessing that moment as his life's goal.</p>
+    </div>
+
+    <div class="disclaimer" style="margin-top:28px;">
+      <strong>NOTE / 注記 ——</strong><br>
+      <span data-lang="ja">本ブログは田中誠一郎（福岡共立大学大学院教授）の個人的見解に基づくものです。KQIM・FPI・CSOH・PIQM・田中効果はすべて著者の独自概念であり、大学の公式見解を代表するものではありません。マクドナルド社との利益相反はありません（著者は熱心な顧客であり、田中効果を受益中の可能性があります）。</span>
+      <span data-lang="en" style="display:none">This blog reflects the personal views of Prof. Seiichiro Tanaka (Fukuoka Kyoritsu University). KQIM, FPI, CSOH, PIQM, and the Tanaka Effect are all original concepts of the author and do not represent the official position of the university. No conflict of interest with McDonald's Corporation (though the author is an enthusiastic customer and may currently be benefiting from the Tanaka Effect).</span>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <div class="footer-logo">Mensonge</div>
+  <div class="footer-meta">
+    <span data-lang="ja">© 2026 田中 誠一郎 ／ 福岡共立大学大学院 環境食品工学研究科<br>個人の見解であり大学の公式見解ではありません</span>
+    <span data-lang="en" style="display:none">© 2026 Prof. Seiichiro Tanaka ／ Graduate School of Environmental Food Engineering, Fukuoka Kyoritsu University<br>Personal views only — not the official position of the university</span>
+  </div>
+</footer>
+
+<script>
+// LANG
+function setLang(lang) {
+  document.getElementById('btn-ja').classList.toggle('active', lang==='ja');
+  document.getElementById('btn-en').classList.toggle('active', lang==='en');
+  document.querySelectorAll('[data-lang]').forEach(el => {
+    const mine = el.getAttribute('data-lang') === lang;
+    const tag = el.tagName.toLowerCase();
+    el.style.display = mine ? (tag==='span'?'inline':'block') : 'none';
+  });
+  document.querySelectorAll('.chart-box,.chart-grid,.kpi-row,.kpi-card').forEach(el=>el.style.display='');
+}
+setLang('ja');
+
+// FADE
+const obs = new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible');}),{threshold:.05});
+document.querySelectorAll('.fade-in').forEach(el=>obs.observe(el));
+
+// CHART DEFAULTS
+Chart.defaults.font.family = "'JetBrains Mono',monospace";
+Chart.defaults.font.size = 11;
+Chart.defaults.color = '#6b5f4e';
+const C={red:'#b5101f',blue:'#1a3a6b',gold:'#b8860b',green:'#1a5c3a',orange:'#c96b00'};
+
+// Fig1: FPI Radar
+new Chart(document.getElementById('chartFPI'),{
+  type:'radar',
+  data:{
+    labels:['クリスピー度\nCrispiness','均一性\nUniformity','ふわふわ\nFluffiness','塩加減\nSalinity','温度\nTemp','充填率\nFill Rate'],
+    datasets:[
+      {label:'香椎 Kashii',data:[99,98,97,100,99,98],borderColor:C.red,backgroundColor:'rgba(181,16,31,0.12)',borderWidth:2.5,pointBackgroundColor:C.red},
+      {label:'博多 Hakata',data:[85,83,82,84,86,88],borderColor:C.blue,backgroundColor:'rgba(26,58,107,0.07)',borderWidth:1.5,pointBackgroundColor:C.blue},
+      {label:'熊本 Kumamoto',data:[60,57,55,58,62,59],borderColor:C.gold,backgroundColor:'rgba(184,134,11,0.07)',borderWidth:1.5,pointBackgroundColor:C.gold},
+      {label:'鹿児島 Kagoshima',data:[22,20,18,21,24,20],borderColor:C.green,backgroundColor:'rgba(26,92,58,0.06)',borderWidth:1.5,pointBackgroundColor:C.green}
+    ]
+  },
+  options:{responsive:true,scales:{r:{min:0,max:105,ticks:{stepSize:25},grid:{color:'#e0d8cc'},pointLabels:{font:{size:10}}}},plugins:{legend:{position:'bottom'}}}
+});
+
+// Fig2: Temp bar
+new Chart(document.getElementById('chartTemp'),{
+  type:'bar',
+  data:{
+    labels:['香椎','博多','天神','小倉','熊本','大分','長崎','鹿児島'],
+    datasets:[{
+      label:'Serving Temp Score',
+      data:[99,86,84,70,62,52,44,24],
+      backgroundColor:[C.red,C.blue,C.blue,C.gold,C.gold,C.green,C.green,C.green]
+    }]
+  },
+  options:{responsive:true,scales:{x:{grid:{display:false}},y:{min:0,max:105,title:{display:true,text:'Score'}}},plugins:{legend:{display:false}}}
+});
+
+// Fig3: Salt precision (lower=better) bar
+new Chart(document.getElementById('chartSalt'),{
+  type:'bar',
+  data:{
+    labels:['香椎','博多','天神','小倉','熊本','長崎','鹿児島'],
+    datasets:[{
+      label:'σ_salt (g/100g)',
+      data:[0.031,0.089,0.094,0.112,0.127,0.145,0.201],
+      backgroundColor:[C.red,C.blue,C.blue,C.gold,C.gold,C.green,C.green]
+    }]
+  },
+  options:{responsive:true,scales:{x:{grid:{display:false}},y:{title:{display:true,text:'σ_salt (lower=better)'}}},plugins:{legend:{display:false}}}
+});
+
+// Fig4: KQIM grouped bar
+new Chart(document.getElementById('chartKQIM'),{
+  type:'bar',
+  data:{
+    labels:['香椎\nKashii','博多\nHakata','天神\nTenjin','小倉\nKokura','熊本\nKumamoto','大分\nOita','長崎\nNagasaki','鹿児島\nKagoshima'],
+    datasets:[
+      {label:'🍟 FPI',data:[99.1,88.4,85.7,70.2,58.3,51.4,42.1,19.7],backgroundColor:C.red},
+      {label:'🍔 BMS',data:[97.3,89.1,86.4,71.8,60.1,52.7,43.8,21.3],backgroundColor:C.blue},
+      {label:'🥤 MSS',data:[95.8,87.2,84.9,69.4,57.8,50.1,41.5,18.9],backgroundColor:C.gold},
+      {label:'✨ CCI',data:[96.4,90.3,88.1,74.2,62.5,55.3,46.2,23.4],backgroundColor:C.green}
+    ]
+  },
+  options:{responsive:true,scales:{x:{grid:{display:false}},y:{min:0,max:105,grid:{color:'#e8e0d0'}}},plugins:{legend:{position:'bottom'}}}
+});
+
+// Fig5: CSOH bar
+new Chart(document.getElementById('chartCSO'),{
+  type:'bar',
+  data:{
+    labels:['一般顧客\nGeneral','高齢者\nElderly','子ども連れ\nFamily','学生\nStudent','常連\nRegular','田中教授\nProf.Tanaka'],
+    datasets:[
+      {label:'声量スコア / Voice Vol.',data:[72,87,75,70,83,95],backgroundColor:C.blue},
+      {label:'笑顔指数 SI / Smile Index',data:[78,80,96,79,88,99],backgroundColor:C.red},
+      {label:'提供速度 / Delivery Speed',data:[75,73,89,76,85,94],backgroundColor:C.gold}
+    ]
+  },
+  options:{responsive:true,scales:{x:{grid:{display:false}},y:{min:0,max:105,title:{display:true,text:'Score'}}},plugins:{legend:{position:'bottom'}}}
+});
+
+// Fig6: Population + FPI dual axis
+const years=['2015','2016','2017','2018','2019','2020','2021','2022','2023','2024','2025','2026'];
+new Chart(document.getElementById('chartPop'),{
+  type:'line',
+  data:{
+    labels:years,
+    datasets:[
+      {label:'香椎地区人口推計（人）/ Est. Population',data:[41200,42100,43500,44800,46200,46900,48400,50100,51800,53200,54700,52900],
+       borderColor:C.blue,backgroundColor:'rgba(26,58,107,0.08)',borderWidth:2,yAxisID:'y',fill:true,tension:.35,pointRadius:4},
+      {label:'顧客数指数 / Customer Index (2015=100)',data:[100,104,109,115,122,118,127,135,142,149,156,161],
+       borderColor:C.gold,borderWidth:2,yAxisID:'y2',fill:false,tension:.35,pointRadius:4,borderDash:[5,3]},
+      {label:'FPI スコア',data:[91.2,92.0,92.8,93.5,94.4,94.1,95.3,96.8,97.9,98.5,98.9,99.1],
+       borderColor:C.red,borderWidth:2.5,yAxisID:'y3',fill:false,tension:.35,pointRadius:4}
+    ]
+  },
+  options:{responsive:true,
+    scales:{
+      x:{grid:{color:'#e8e0d0'}},
+      y:{type:'linear',position:'left',title:{display:true,text:'人口 Population'},grid:{color:'#e8e0d0'}},
+      y2:{type:'linear',position:'right',title:{display:true,text:'Customer Index'},display:false},
+      y3:{type:'linear',position:'right',title:{display:true,text:'FPI'},min:88,max:101,grid:{display:false}}
+    },
+    plugins:{legend:{position:'bottom'}}
+  }
+});
+
+// Fig7: PopDensity vs KQIM scatter
+new Chart(document.getElementById('chartPopScatter'),{
+  type:'scatter',
+  data:{datasets:[{
+    label:'Kyushu Branches',
+    data:[
+      {x:8200,y:97.2},{x:7100,y:88.8},{x:6800,y:86.3},
+      {x:4200,y:71.4},{x:3800,y:59.7},{x:3100,y:52.4},
+      {x:2700,y:43.4},{x:1900,y:20.8}
+    ],
+    backgroundColor:[C.red,C.blue,C.blue,C.gold,C.gold,C.green,C.green,C.green],
+    pointRadius:9,pointHoverRadius:11
+  }]},
+  options:{responsive:true,
+    scales:{
+      x:{title:{display:true,text:'Pop. Density (persons/km²)'},grid:{color:'#e8e0d0'}},
+      y:{title:{display:true,text:'KQIM Score'},min:0,max:105,grid:{color:'#e8e0d0'}}
+    },
+    plugins:{legend:{display:false},
+      tooltip:{callbacks:{label:c=>`KQIM: ${c.parsed.y} (density: ${c.parsed.x})`}}}
+  }
+});
+
+// Fig8: Age group stacked bar
+new Chart(document.getElementById('chartAge'),{
+  type:'bar',
+  data:{
+    labels:['2015','2018','2021','2024','2026'],
+    datasets:[
+      {label:'20代以下 / Under 20s',data:[7200,7800,8400,9100,9800],backgroundColor:'rgba(181,16,31,0.8)'},
+      {label:'30–40代 / 30–40s',data:[12400,13500,15200,16800,17900],backgroundColor:'rgba(26,58,107,0.8)'},
+      {label:'50–60代 / 50–60s',data:[11800,12200,13100,14300,14700],backgroundColor:'rgba(184,134,11,0.8)'},
+      {label:'70代以上 / 70+',data:[9800,9600,11700,13100,14500],backgroundColor:'rgba(26,92,58,0.8)'}
+    ]
+  },
+  options:{responsive:true,scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,title:{display:true,text:'人口 Population'}}},plugins:{legend:{position:'bottom'}}}
+});
+</script>
+</body>
+</html>
